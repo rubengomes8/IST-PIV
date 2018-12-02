@@ -1,6 +1,6 @@
-function connection = update_objects(objects, box, im_hsv )
-%Compares previous known objects with current boxed object; return
-%connection if exists
+function [objects,connection] = update_objects(nr_obj, box, objects )
+% Compares previous known objects with current boxed object; return
+% connection if exists
 %   for example, if box(1) is connected to object 2 then connection(1) = 2
 %   if there is no connection then connection(i) = 0;
 
@@ -9,13 +9,12 @@ function connection = update_objects(objects, box, im_hsv )
 % object center of mass(needs to be calculated here because it is not
 % included in the struct) and color histogram
 
-connection = zeros(1,length(box));
+connection = zeros(1,nr_obj);
 
-for i = 1:length(box)
+for i = 1:nr_obj
     for j = 1:length(objects)
-        
         %calculate cost(color+distance)
-        cost(j) = 
+        cost(j) = xyz_dist(box.cm(i),objects.cm(i)) + color_dist(box.hist(i,:,:),objects.hist(i,:,:));
     end
     [best,n] = min(cost);
     if best < 0.1 %threshold. We need to be careful with the possibility of having 2 boxes choosing 1 object
@@ -23,4 +22,3 @@ for i = 1:length(box)
     end    
    
 end
-
