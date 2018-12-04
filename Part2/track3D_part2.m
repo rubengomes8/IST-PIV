@@ -1,115 +1,56 @@
-%function [objects, cam2toW] = track3D_part2( imgseq1, imgseq2, cam_params)
+function [objects, cam2toW] = track3D_part2( imgseq1, imgseq2, cam_params)
 
 
-% Calculate C2 to C1 transformation
-
-im1=imread('rgb_image1_001.png');
-im2=imread('rgb_image2_001.png');
-
-load CalibrationData.mat
-load depth1_001.mat
-depth1 = depth_array;
-load depth2_001.mat
-depth2 = depth_array;
+[r1, res1_xyz_median] = get_rgb(imgseq1, cam_params);
+[r2, res2_xyz_median] = get_rgb(imgseq2, cam_params);
 
 
-%obtain xyz coordinates of the image in an array, all normalized to the rgb
-%camera plane
-xyz1=get_xyz_asus(depth1(:),[480 640],1:640*480,Depth_cam.K,1,0);
-xyz2=get_xyz_asus(depth2(:),[480 640],1:640*480,Depth_cam.K,1,0);
+%% Calculates Transformation from Procrustes
+[tr] = calculate_transformation(r1(1),r2(2),imread(imgseq1(1).rgb),imread(imgseq2(1).rgb));
 
-%obtain rgb 
-rgbd1 = get_rgbd(xyz1, im1, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
-rgbd2 = get_rgbd(xyz2, im2, R_d_to_rgb, T_d_to_rgb, RGB_cam.K);
+%% Motion detection
 
-%xyz in image coordinates
-xyz1_img = reshape(xyz1,[480,640,3]);
-xyz2_img = reshape(xyz2,[480,640,3]);
-
-%finds features using SIFT for each image
-[f1,d1]=vl_sift(single(rgb2gray(im1)));
-[f2,d2]=vl_sift(single(rgb2gray(im2)));
-
-%Matches features found above
-[matches,~] = vl_ubcmatch(d1, d2,1.3);
-
-%normalizes coordinates to matrix indexing
-match1 = [uint64(f1(2,matches(1,:)))' uint64(f1(1,matches(1,:)))'];
-match2 = [uint64(f2(2,matches(2,:)))' uint64(f2(1,matches(2,:)))'];
-
-%%
-figure(1);
-imagesc(im1);hold on;plot(f1(1,matches(1,:)),f1(2,matches(1,:)),'*');hold off;
-figure(2);
-imagesc(im2);hold on;plot(f2(1,matches(2,:)),f2(2,matches(2,:)),'*');hold off;
-
-%%
-%%transform u,v into xyz, removing features that are in z = 0
-not_feature = [];
-point1 = [];
-point2 = [];
-for i = 1:length(match1)
-%     pts1 = match1(i,:);
-%     pts2 = match2(i,:);
-    aux1 = reshape(xyz1_img(match1(i,1),match1(i,2),:),[3 1]);
-    aux2 = reshape(xyz2_img(match2(i,1),match2(i,2),:),[3 1]);  
-    if( aux1(3) == 0 || aux2(3) == 0)
-        not_feature = [not_feature i];
-    end  
-    point1(:,i) = aux1;
-    point2(:,i) = aux2;
-end
-
-point1 = [point1 ];
-point2 = [point2 ];
-%%
-%%RANSAC
-n_points = 5;
-errorthresh=0.08;
-niter=10000;
-numinliers = [];
-matching = [];
-
-for i=1:niter-(n_points-1)
-    %obtain N random matches from SIFT
-    aux = randperm(length(point1),n_points);
+for i=1:length(imgseq1(:))
     
-    %Check if chosen matches do not belong to not_feature
-    while (sum(ismember(aux,not_feature) > 0))
-        aux = randi([1 length(point1)],1,n_points);
+    %% Background Subtratction
+    %Image 1
+    im_diff21 = abs(r1(i).res_xyz(:,:,3)-res1_xyz_median)>.7;
+    im_diffiltered21 = imopen(im_diff2,strel('disk',5));
+    [label1, nr_obj1] = bwlabel(im_diffiltered21);
+    %Image2
+    im_diff22 = abs(r2(i).res_xyz(:,:,3)-res2_xyz_median)>.7;
+    im_diffiltered22 = imopen(im_diff22,strel('disk',5));
+    [label2, nr_obj2] = bwlabel(im_diffiltered22);
+    
+    %Background image
+    figure(1);imagesc([res1_xyz_median res2_xyz_median]);
+    %Depth image
+    figure(2); imagesc([r(i).res_xyz(:,:,3) r(i).res_xyz(:,:,3)]);
+    %Labeled Connected components
+    figure(3);imagesc([label1 label2]);
+
+    %this should output the box coordinates of i objects and their centers of mass in xyz
+    %meters
+    box1 = get_box(label1, nr_obj1, r1(i));
+    box2 = get_box(label2, nr_obj2, r2(i));
+    
+    
+    %% This should be slightly different from part 1
+    if i == 1 % first frame, store all objects!       
+        prev_frame_box = box;
+    
+    else
+        %1. Compare current box with all objects in object
+%         [objects,connection] = update_objects(nr_obj, box, objects);
+        
+        %2. For the remaining boxes of 1. compare with the last frame box array
+%         [objects,connection] = add_object(objects,box,prev_frame_box,connection);
+        
+        %3. For the remaining boxes of 2. save in array, thus deleting past boxes
+        %unused boxes are:
+%         not_used = find(connection == 0)
+%         prev_frame_box = box(findnot_used);  
     end
-    %store the match number
-    matching = [matching aux'];
 
-    %obtain the xyz points corresponding to the match
-    p1 = point1(:,aux);  
-    p2 = point2(:,aux);   
-    
-    %calculate rotation and translation using procrustes
-    [~,~,tr] = procrustes(p1',p2','scaling',false,'reflection',false);
-  
-    %count the number of inliers from this model
-    error = vecnorm((point1(:,:)'- (point2(:,:)'*tr.T + ones(length(point2),1)*tr.c(1,:))),2,2);
-    inds = find(error < errorthresh);  
-    numinliers = [numinliers length(inds)];
-    
+
 end
-%% 
-% use the best model
-[mm,ind] = max(numinliers);
-fprintf('Maximum num of inliers %d \n',mm);
-
-p1 = point1(:,matching(:,ind));
-p2 = point2(:,matching(:,ind));
-    
-[~,~,tr] = procrustes(p1',p2','scaling',false,'reflection',false);
-xyz2_morphed = xyz2*tr.T + ones(length(xyz2),1)*tr.c(1,:);
-xyz2_img_morphed = reshape(xyz2_morphed,[480 640 3]);
-
-
-%%
-pc1=pointCloud(xyz1,'Color',reshape(rgbd1,[480*640 3]));
-pc2=pointCloud(xyz2_morphed,'Color',reshape(rgbd2,[480*640 3]));
-figure(3);hold off;
-pcshow(pcmerge(pc1,pc2,0.001));
-drawnow;
