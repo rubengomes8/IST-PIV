@@ -12,14 +12,20 @@ function box = get_box(label, nr_obj, r)
     %difX = 1;
     %difY = 1.5;
     difZ = 0.4;
+    box.X = [];
+    box.Y = [];
+    box.Z = [];
+    box.cm = [];
+    box.hist = [];
  %%
     for i = 1:nr_obj
-        Xmax = -5;
-        Xmin = 5;
-        Ymax = -5;
-        Ymin = 5;
-        Zmax = -7;
-        Zmin = 7;
+        Xmax = -100;
+        Xmin = 100;
+        Ymax = -15;
+        Ymin = 15;
+        Zmax = -10;
+        Zmin = 10;
+        color = [];
         %finds rows and columns with label i
         [row,c] = find(label==i);
         aux = zeros(1,length(row));
@@ -27,74 +33,77 @@ function box = get_box(label, nr_obj, r)
             aux(a) = r.res_xyz(row(a),c(a),3);
         end
         mediana = median(aux);
-        for a = 1:length(row)
-            if r.res_xyz(row(a),c(a),1) ~= 0
-                if r.res_xyz(row(a),c(a),1) > Xmax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
-                    Xmax = r.res_xyz(row(a),c(a),1);
+        if sum(aux) ~= 0   
+            for a = 1:length(row)
+                if r.res_xyz(row(a),c(a),3) == 0
+                    continue
                 end
-            end
-            if r.res_xyz(row(a),c(a),2) ~= 0
-                if r.res_xyz(row(a),c(a),2) > Ymax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
-                    Ymax = r.res_xyz(row(a),c(a),2);
+                if r.res_xyz(row(a),c(a),1) ~= 0
+                    if r.res_xyz(row(a),c(a),1) > Xmax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
+                        Xmax = r.res_xyz(row(a),c(a),1);
+                    end
                 end
-            end
-            if r.res_xyz(row(a),c(a),3) ~=0
-                if r.res_xyz(row(a),c(a),3) < Zmin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
-                    Zmin = r.res_xyz(row(a),c(a),3);
+                if r.res_xyz(row(a),c(a),2) ~= 0
+                    if r.res_xyz(row(a),c(a),2) > Ymax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
+                        Ymax = r.res_xyz(row(a),c(a),2);
+                    end
                 end
-            end
-            
-            if r.res_xyz(row(a),c(a),1) ~= 0
-                if r.res_xyz(row(a),c(a),1) < Xmin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
-                    Xmin = r.res_xyz(row(a),c(a),1);
+                if r.res_xyz(row(a),c(a),3) ~=0
+                    if r.res_xyz(row(a),c(a),3) < Zmin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
+                        Zmin = r.res_xyz(row(a),c(a),3);
+                    end
                 end
-            end
-            if r.res_xyz(row(a),c(a),2) ~= 0 
-                if r.res_xyz(row(a),c(a),2) < Ymin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
-                    Ymin = r.res_xyz(row(a),c(a),2);
+
+                if r.res_xyz(row(a),c(a),1) ~= 0
+                    if r.res_xyz(row(a),c(a),1) < Xmin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
+                        Xmin = r.res_xyz(row(a),c(a),1);
+                    end
                 end
-            end
-            if r.res_xyz(row(a),c(a),3) ~=0 
-                if r.res_xyz(row(a),c(a),3) > Zmax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
-                    Zmax = r.res_xyz(row(a),c(a),3);
+                if r.res_xyz(row(a),c(a),2) ~= 0 
+                    if r.res_xyz(row(a),c(a),2) < Ymin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
+                        Ymin = r.res_xyz(row(a),c(a),2);
+                    end
                 end
+                if r.res_xyz(row(a),c(a),3) ~=0 
+                    if r.res_xyz(row(a),c(a),3) > Zmax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
+                        Zmax = r.res_xyz(row(a),c(a),3);
+                    end
+                end
+                %get color
+                color(a,1:3) = reshape(rgb2hsv(r.rgbd(row(a),c(a),:)),[1 3]);
             end
-            %get color
-            color(a,1:3) = reshape(rgb2hsv(r.rgbd(row(a),c(a),:)),[1 3]);
         end
 %% Obtain box coordinates
-    if Xmin == 5 && Xmax == -5 && Ymin == 5 && Ymax == -5 && Zmin == 7 && Zmax == -7
-        box.X(i,1:8) = 0;
-        box.Y(i,1:8) = 0;
-        box.Z(i,1:8) = 0;
+    if Xmax == -100
+        continue
     else
-        box.X(i,1) = Xmin;
-        box.X(i,2) = Xmax;
-        box.X(i,3) = Xmin;
-        box.X(i,4) = Xmax;
-        box.X(i,5:8) = box.X(i,1:4);
-        box.Y(i,1:2) = Ymin;
-        box.Y(i,3:4) = Ymax;
-        box.Y(i,5:8) = box.Y(i,1:4);
-        box.Z(i,1:4) = Zmin;
-        box.Z(i,5:8) = Zmax;
-    end
-        box.cm(i,:) = [(Xmax+Xmin)/2 (Ymax+Ymin)/2 (Zmax+Zmin)/2 ];
+        box.X(end+1,1) = Xmin;
+        box.X(end,2) = Xmax;
+        box.X(end,3) = Xmin;
+        box.X(end,4) = Xmax;
+        box.X(end,5:8) = box.X(end,1:4);
+        box.Y(end+1,1:2) = Ymin;
+        box.Y(end,3:4) = Ymax;
+        box.Y(end,5:8) = box.Y(end,1:4);
+        box.Z(end+1,1:4) = Zmin;
+        box.Z(end,5:8) = Zmax;
+        box.cm(end+1,:) = [(Xmax+Xmin)/2 (Ymax+Ymin)/2 (Zmax+Zmin)/2 ];
         [count, hbox] = histcounts(color(:,1),64);
-        box.hist(i,:,:) = [count ; hbox(1:end-1)];
+        box.hist(end+1,:,:) = [count ; hbox(1:end-1)];
+    end
 %% Draw boxes
         hold on;
-        patch([box.X(i,1),box.X(i,2),box.X(i,4),box.X(i,3)],...
-            [box.Y(i,1),box.Y(i,2),box.Y(i,4),box.Y(i,3)],...
+        patch([box.X(end,1),box.X(end,2),box.X(end,4),box.X(end,3)],...
+            [box.Y(end,1),box.Y(end,2),box.Y(end,4),box.Y(end,3)],...
             [Zmin,Zmin,Zmin,Zmin],'white');
-        patch([box.X(i,5),box.X(i,6),box.X(i,8),box.X(i,7)],...
-            [box.Y(i,5),box.Y(i,6),box.Y(i,8),box.Y(i,7)],...
+        patch([box.X(end,5),box.X(end,6),box.X(end,8),box.X(end,7)],...
+            [box.Y(end,5),box.Y(end,6),box.Y(end,8),box.Y(end,7)],...
             [Zmax,Zmax,Zmax,Zmax],'white');
-        patch([box.X(i,1),box.X(i,5),box.X(i,7),box.X(i,3)],...
-            [box.Y(i,1),box.Y(i,5),box.Y(i,7),box.Y(i,3)],...
+        patch([box.X(end,1),box.X(end,5),box.X(end,7),box.X(end,3)],...
+            [box.Y(end,1),box.Y(end,5),box.Y(end,7),box.Y(end,3)],...
             [Zmin,Zmax,Zmax,Zmin],'white');
-        patch([box.X(i,2),box.X(i,6),box.X(i,8),box.X(i,4)],...
-            [box.Y(i,2),box.Y(i,6),box.Y(i,8),box.Y(i,4)],...
+        patch([box.X(end,2),box.X(end,6),box.X(end,8),box.X(end,4)],...
+            [box.Y(end,2),box.Y(end,6),box.Y(end,8),box.Y(end,4)],...
             [Zmin,Zmax,Zmax,Zmin],'white');
         alpha(0); %para ficar transparente
     end
