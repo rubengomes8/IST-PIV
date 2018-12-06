@@ -18,10 +18,10 @@ end
 for i = 1:nr_obj
     for j = 1:length(objects)
         %calculate cost(color+distance)
-        cost(j) = xyz_dist(box.cm(i,:),objects(j).cm) + color_dist(box.hist(i,:,:),objects(j).hist(end,:,:));
+        cost(j) = xyz_dist(box.cm(i,:),objects(j).cm);% + color_dist(box.hist(i,:,:),objects(j).hist(end,:,:));
     end
     [best,n] = min(cost);
-    if best < 0.1 %threshold. We need to be careful with the possibility of having 2 boxes choosing 1 object
+    if best < 0.2 %threshold. We need to be careful with the possibility of having 2 boxes choosing 1 object
         connection(i) = n;
         objects(j).X = [objects(j).X ; box.X(i,:)];
         objects(j).Y = [objects(j).Y ; box.Y(i,:)];

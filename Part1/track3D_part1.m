@@ -17,11 +17,11 @@ for i=1:length(imgseq1(:))
     [label, nr_obj] = bwlabel(im_diffiltered2);
     
     %Background image
-    %figure(1);imagesc(res_xyz_median);
+    figure(1);imagesc(res_xyz_median);
     %Depth image
-    %figure(2); imagesc(r(i).res_xyz(:,:,3));
+    figure(2); imagesc(r(i).res_xyz(:,:,3));
     %Labeled Connected components
-    %figure(3);imagesc(label);
+    figure(3);imagesc(label);
 
     
     %this should output the box coordinates of i objects and their centers of mass in xyz
