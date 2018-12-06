@@ -24,8 +24,8 @@ for i = 1:nr_obj
     if best < 0.1 %threshold. We need to be careful with the possibility of having 2 boxes choosing 1 object
         connection(i) = n;
         objects(j).X = [objects(j).X ; box.X(i,:)];
-        objects(j).Y = [objects(j).X ; box.X(i,:)];
-        objects(j).Z = [objects(j).X ; box.X(i,:)];
+        objects(j).Y = [objects(j).Y ; box.Y(i,:)];
+        objects(j).Z = [objects(j).Z ; box.Z(i,:)];
         objects(j).cm =box.cm(i,:);
         objects(j).hist = box.hist(i,:,:);
         objects(j).frames_tracked = [objects(j).frames_tracked current_frame];

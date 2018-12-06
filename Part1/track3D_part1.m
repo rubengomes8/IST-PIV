@@ -26,7 +26,7 @@ for i=1:length(imgseq1(:))
     
     %this should output the box coordinates of i objects and their centers of mass in xyz
     %meters
-    box = get_box(label, nr_obj, r(i));
+    [box,nr_obj] = get_box(label, nr_obj, r(i));
     connection = [];
     
     if i == 1 % first frame, store all objects!       

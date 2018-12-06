@@ -1,12 +1,12 @@
-function box = get_box(label, nr_obj, r)
+function [box,nr_obj] = get_box(label, nr_obj, r)
     %Stores all detected objects and their bound box
     % CALCULA RGBD, N�O PERCEBO BEM O QUE ACONTECE AQUI
     
     %shows rgb image
-    figure(4);imagesc(r.rgbd);
+    %figure(4);imagesc(r.rgbd);
     %Shows point cloud
-    pc=pointCloud(r.xyz,'Color',reshape(r.rgbd,[480*640 3]));
-    figure(5);clf; showPointCloud(pc);
+    %pc=pointCloud(r.xyz,'Color',reshape(r.rgbd,[480*640 3]));
+    %figure(5);clf; showPointCloud(pc);
     
     %Label 0 is background!
     %difX = 1;
@@ -91,20 +91,21 @@ function box = get_box(label, nr_obj, r)
         [count, hbox] = histcounts(color(:,1),64);
         box.hist(end+1,:,:) = [count ; hbox(1:end-1)];
     end
-%% Draw boxes
-        hold on;
-        patch([box.X(end,1),box.X(end,2),box.X(end,4),box.X(end,3)],...
-            [box.Y(end,1),box.Y(end,2),box.Y(end,4),box.Y(end,3)],...
-            [Zmin,Zmin,Zmin,Zmin],'white');
-        patch([box.X(end,5),box.X(end,6),box.X(end,8),box.X(end,7)],...
-            [box.Y(end,5),box.Y(end,6),box.Y(end,8),box.Y(end,7)],...
-            [Zmax,Zmax,Zmax,Zmax],'white');
-        patch([box.X(end,1),box.X(end,5),box.X(end,7),box.X(end,3)],...
-            [box.Y(end,1),box.Y(end,5),box.Y(end,7),box.Y(end,3)],...
-            [Zmin,Zmax,Zmax,Zmin],'white');
-        patch([box.X(end,2),box.X(end,6),box.X(end,8),box.X(end,4)],...
-            [box.Y(end,2),box.Y(end,6),box.Y(end,8),box.Y(end,4)],...
-            [Zmin,Zmax,Zmax,Zmin],'white');
-        alpha(0); %para ficar transparente
+% %% Draw boxes
+%         hold on;
+%         patch([box.X(end,1),box.X(end,2),box.X(end,4),box.X(end,3)],...
+%             [box.Y(end,1),box.Y(end,2),box.Y(end,4),box.Y(end,3)],...
+%             [Zmin,Zmin,Zmin,Zmin],'white');
+%         patch([box.X(end,5),box.X(end,6),box.X(end,8),box.X(end,7)],...
+%             [box.Y(end,5),box.Y(end,6),box.Y(end,8),box.Y(end,7)],...
+%             [Zmax,Zmax,Zmax,Zmax],'white');
+%         patch([box.X(end,1),box.X(end,5),box.X(end,7),box.X(end,3)],...
+%             [box.Y(end,1),box.Y(end,5),box.Y(end,7),box.Y(end,3)],...
+%             [Zmin,Zmax,Zmax,Zmin],'white');
+%         patch([box.X(end,2),box.X(end,6),box.X(end,8),box.X(end,4)],...
+%             [box.Y(end,2),box.Y(end,6),box.Y(end,8),box.Y(end,4)],...
+%             [Zmin,Zmax,Zmax,Zmin],'white');
+%         alpha(0); %para ficar transparente
     end
+    nr_obj = length(box.cm);
 end

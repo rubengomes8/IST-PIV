@@ -14,13 +14,12 @@ for i = 1:length(box)
     if best < 0.1 %threshold. We need to be careful with the possibility of having 2 boxes choosing 1 box
         %add new object
         connection(i) = n;
-        new = length(objects) + 1;
-        objects(new).X = [prev_frame_box.X(j,:) ; box.X(i,:)];
-        objects(new).Y = [prev_frame_box.Y(j,:) ; box.X(i,:)];
-        objects(new).Z = [prev_frame_box.Z(j,:) ; box.X(i,:)];
-        objects(new).cm =box.cm(i,:);
-        objects(new).hist = box.hist(i,:,:);
-        objects(new).frames_tracked = [current_frame-1 current_frame];
+        objects(end+1).X=[prev_frame_box.X(j,:) ; box.X(i,:)];
+        objects(end).Y = [prev_frame_box.Y(j,:) ; box.Y(i,:)];
+        objects(end).Z = [prev_frame_box.Z(j,:) ; box.Z(i,:)];
+        objects(end).cm =box.cm(i,:);
+        objects(end).hist = box.hist(i,:,:);
+        objects(end).frames_tracked = [current_frame-1 current_frame];
         
     end
 end
