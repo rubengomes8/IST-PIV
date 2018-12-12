@@ -5,6 +5,7 @@ function objects = track3D_part1(imgseq1, cam_params )
 objects = [];
 aux = 0;
 indice = 1;
+max_z_bg = max(max(res_xyz_median));
 for i=1:length(imgseq1(:))
     
     im_diff2 = abs(r(i).res_xyz(:,:,3)-res_xyz_median)>.6;
@@ -26,7 +27,7 @@ for i=1:length(imgseq1(:))
 
    box = get_box(label, nr_obj, r(i));
 
-    if indice == 1 % first frame, store all objects!       
+    if indice == 1% first frame, store all objects!       
         prev_frame_box = box;
         indice = 0;
     elseif length(prev_frame_box.Z)<1
@@ -36,7 +37,7 @@ for i=1:length(imgseq1(:))
         prev_frame_box = box;
         continue
     else
-        [box,prev_frame_box] = add_object(box,prev_frame_box,aux);
+        [box,prev_frame_box] = add_object(box,prev_frame_box,aux,max_z_bg);
         aux = 1;
         for a = 1:length(prev_frame_box.X(:,1))
             if prev_frame_box.connection(a) ~= 0

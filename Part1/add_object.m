@@ -1,11 +1,11 @@
-function [box,prev_frame_box]=add_object(box,prev_frame_box,aux)
+function [box,prev_frame_box]=add_object(box,prev_frame_box,aux, max_z_bg)
 %Similar to update, this one compares 2 box arrays
     number=1;
     for i = 1:length(box.X(:,1))
         cost = zeros(1,length(prev_frame_box.X(:,1)));
         for j = 1:length(prev_frame_box.X(:,1))
             %calculate cost(color+distance)
-            xyz = xyz_dist(box.cm(i,:),prev_frame_box.cm(j,:));
+            xyz = xyz_dist(box.cm(i,:),prev_frame_box.cm(j,:), max_z_bg);
             %color = color_dist(box.hist(i,:,:),prev_frame_box.hist(j,:,:));
             cost(j) = xyz;
         end
