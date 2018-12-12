@@ -37,7 +37,7 @@ end
 %%
 %%RANSAC
 n_points = 4;
-errorthresh=0.1;
+errorthresh=0.16;
 niter=200;
 numinliers = [];
 matching = [];
@@ -87,8 +87,8 @@ figure(2);
 imagesc([im1 im2]);hold on;
 line([match1(mtc,1)'; match2(mtc,1)'+640],[match1(mtc,2)';match2(mtc,2)']);hold off;
 
-pc1=pointCloud(r1.xyz1,'Color',reshape(r1.rgbd1,[480*640 3]));
-pc2=pointCloud(xyz2_morphed,'Color',reshape(r2.rgbd2,[480*640 3]));
+pc1=pointCloud(r1.xyz,'Color',reshape(r1.rgbd,[480*640 3]));
+pc2=pointCloud(xyz2_morphed,'Color',reshape(r2.rgbd,[480*640 3]));
 figure(5);hold off;
 pcshow(pcmerge(pc1,pc2,0.001));
 drawnow;
