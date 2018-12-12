@@ -10,10 +10,8 @@ f2 = hist2(2,:)';
 w1 = hist1(1,:)' / sum(hist1(1,:));
 w2 = hist2(1,:)' / sum(hist2(1,:));
 
-%Bhattacharyya
 distance = 1-(sqrt(w1(:)')*sqrt(w2(:)));
-
-%EMD might be necessay to nornalize distance to 0-1
+%might be necessay to nornalize distance to 0-1
 %[~, distance] = emd(f1, f2, w1, w2, @gdf);
 end
 

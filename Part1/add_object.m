@@ -1,28 +1,34 @@
-function [objects,connection]=add_object(objects,box,prev_frame_box,connection,current_frame)
+function [box,prev_frame_box]=add_object(box,prev_frame_box,aux)
 %Similar to update, this one compares 2 box arrays
-
-
-for i = 1:length(box.cm)
-    if connection(i) ~=0
-        continue;
+    number=1;
+    for i = 1:length(box.X(:,1))
+        cost = zeros(1,length(prev_frame_box.X(:,1)));
+        for j = 1:length(prev_frame_box.X(:,1))
+            %calculate cost(color+distance)
+            xyz = xyz_dist(box.cm(i,:),prev_frame_box.cm(j,:));
+            %color = color_dist(box.hist(i,:,:),prev_frame_box.hist(j,:,:));
+            cost(j) = xyz;
+        end
+        [best,n] = min(cost);
+        if best < 0.1 %threshold. We need to be careful with the possibility of having 2 boxes choosing 1 box
+            %add new object
+            box.connection(i) = n;
+            prev_frame_box.connection(n) = i;
+            if aux == 0
+                box.nr(i) = number;
+                prev_frame_box.nr(n) = number;
+                number = number+1;
+            else
+                if prev_frame_box.nr(n) == 0
+                    number = max(prev_frame_box.nr)+1;
+                    box.nr(i) = number;
+                    prev_frame_box.nr(n) = number;
+                else
+                    box.nr(i) = prev_frame_box.nr(n);
+                end
+            end
+                
+        end
     end
-    cost = 1;
-    for j = 1:length(prev_frame_box.X(:,1))
-        %calculate cost(color+distance)
-        cost(j) = xyz_dist(box.cm(i,:),prev_frame_box.cm(j,:));% + color_dist(box.hist(i,:,:),prev_frame_box.hist(j,:,:));
-    end
-    [best,n] = min(cost);
-    if best < 0.15 %threshold. We need to be careful with the possibility of having 2 boxes choosing 1 box
-        %add new object
-        connection(i) = n;
-        objects(end+1).X=[prev_frame_box.X(j,:) ; box.X(i,:)];
-        objects(end).Y = [prev_frame_box.Y(j,:) ; box.Y(i,:)];
-        objects(end).Z = [prev_frame_box.Z(j,:) ; box.Z(i,:)];
-        objects(end).cm =box.cm(i,:);
-        objects(end).hist = box.hist(i,:,:);
-        objects(end).frames_tracked = [current_frame-1 current_frame];
-        
-    end
-end
 
 end
