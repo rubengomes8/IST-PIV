@@ -1,6 +1,6 @@
 function [im_diffiltered2]=segment(im_diffiltered2,depth)
 
-contour = edge(depth,0.5);
+contour = edge(depth,0.3);
 [row,col] = find(contour==1);
 
 

@@ -3,6 +3,7 @@ function objects = track3D_part1(imgseq1, cam_params )
 
 [r, res_xyz_median] = get_rgb(imgseq1, cam_params);
 objects = [];
+obj = [];
 aux = 0;
 indice = 1;
 max_z_bg = max(max(res_xyz_median));
@@ -38,7 +39,7 @@ for i=1:length(imgseq1(:))
         prev_frame_box = box;
         continue
     else
-        [box,prev_frame_box] = add_object(box,prev_frame_box,aux,max_z_bg);
+        [box,prev_frame_box] = add_object(box,prev_frame_box,aux,max_z_bg,obj);
         aux = 1;
         for a = 1:length(prev_frame_box.X(:,1))
             if prev_frame_box.connection(a) ~= 0
