@@ -33,31 +33,31 @@ function box = get_box(label, nr_obj, r)
         Zmin = 7;
         for a = 1:length(aux)
             if r.res_xyz(row(a),c(a),3) ~= 0
-                if r.res_xyz(row(a),c(a),1) > Xmax && r.res_xyz(row(a),c(a),3)<mediana(f)+difZ && r.res_xyz(row(a),c(a),3)>mediana(f)-difZ
+                if r.res_xyz(row(a),c(a),1) > Xmax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
                     Xmax = r.res_xyz(row(a),c(a),1);
                 end
 
 
-                if r.res_xyz(row(a),c(a),2) > Ymax && r.res_xyz(row(a),c(a),3)<mediana(f)+difZ && r.res_xyz(row(a),c(a),3)>mediana(f)-difZ
+                if r.res_xyz(row(a),c(a),2) > Ymax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
                     Ymax = r.res_xyz(row(a),c(a),2);
                 end
 
 
-                if r.res_xyz(row(a),c(a),3) < Zmin && r.res_xyz(row(a),c(a),3)<mediana(f)+difZ && r.res_xyz(row(a),c(a),3)>mediana(f)-difZ
+                if r.res_xyz(row(a),c(a),3) < Zmin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
                     Zmin = r.res_xyz(row(a),c(a),3);
                 end
 
 
 
-                if r.res_xyz(row(a),c(a),1) < Xmin && r.res_xyz(row(a),c(a),3)<mediana(f)+difZ && r.res_xyz(row(a),c(a),3)>mediana(f)-difZ
+                if r.res_xyz(row(a),c(a),1) < Xmin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
                     Xmin = r.res_xyz(row(a),c(a),1);
                 end
 
-                if r.res_xyz(row(a),c(a),2) < Ymin && r.res_xyz(row(a),c(a),3)<mediana(f)+difZ && r.res_xyz(row(a),c(a),3)>mediana(f)-difZ
+                if r.res_xyz(row(a),c(a),2) < Ymin && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
                     Ymin = r.res_xyz(row(a),c(a),2);
                 end
 
-                if r.res_xyz(row(a),c(a),3) > Zmax && r.res_xyz(row(a),c(a),3)<mediana(f)+difZ && r.res_xyz(row(a),c(a),3)>mediana(f)-difZ
+                if r.res_xyz(row(a),c(a),3) > Zmax && r.res_xyz(row(a),c(a),3)<mediana+difZ && r.res_xyz(row(a),c(a),3)>mediana-difZ
                     Zmax = r.res_xyz(row(a),c(a),3);
                 end
             end
