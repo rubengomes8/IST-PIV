@@ -1,5 +1,5 @@
 function [distance] = color_dist(histogram1,histogram2)
-%Calculates distance between two color histograms using EMD
+%Calculates distance between two color histograms using the Bhattacharyya coefficient
 
 hist1 = reshape(histogram1,[2 length(histogram1(1,1,:))]);
 hist2 = reshape(histogram2,[2 length(histogram2(1,1,:))]);
