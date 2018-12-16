@@ -11,7 +11,7 @@ for i=1:length(imgseq1(:))
     
     im_diff2 = abs(r(i).res_xyz(:,:,3)-res_xyz_median)>.5;
     im_diffiltered2=imopen(im_diff2,strel('disk',3));
-    im_diffiltered2 = segment(im_diffiltered2,r(i).res_xyz(:,:,3));
+    im_diffiltered2 = segment(im_diffiltered2,r(i).res_xyz(:,:,2));
     [label, nr_obj] = bwlabel(im_diffiltered2);
     
     %Background image
@@ -24,7 +24,7 @@ for i=1:length(imgseq1(:))
     
     %this should output the box coordinates of i objects and their centers of mass in xyz
     %meters
-    % caso nao haja objectos na primeira imagem, fazer confirmação qual a
+    % caso nao haja objectos na primeira imagem, fazer confirmaÃ§Ã£o qual a
     % imagem que tem o primeiro objecto
 
    box = get_box(label, nr_obj, r(i));
