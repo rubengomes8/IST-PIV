@@ -81,8 +81,9 @@ function box = get_box(label, nr_obj, r)
             box.connection(indice) = 0;
             box.nr(indice) = 0;
             box.cm(indice,:) = [(Xmax+Xmin)/2 (Ymax+Ymin)/2 (Zmax+Zmin)/2 ];
-            [count, hbox] = histcounts(color(:,1),64);
-            box.hist(indice,:,:) = [count ; hbox(1:end-1)];
+            [count1, ~] = histcounts(color(:,1),64);
+            [count2, ~] = histcounts(color(:,2),64);
+            box.hist(indice,:,:) = [count1 ; count2];
             %% Draw boxes
             hold on;
             patch([box.X(indice,1),box.X(indice,2),box.X(indice,4),box.X(indice,3)],...
