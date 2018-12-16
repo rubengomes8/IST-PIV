@@ -3,7 +3,9 @@ function [objects, cam2toW] = track3D_part2( imgseq1, imgseq2, cam_params)
 
 [r1, res1_xyz_median] = get_rgb(imgseq1, cam_params);
 [r2, res2_xyz_median] = get_rgb(imgseq2, cam_params);
-objects = [];
+objects = struct;
+obj1=[];
+obj2=[];
 aux1 = 0;
 indice1 = 1;
 max_z_bg1 = max(max(res1_xyz_median));
@@ -13,7 +15,8 @@ max_z_bg2 = max(max(res2_xyz_median));
 
 %% Calculates Transformation from Procrustes
 [tr] = calculate_transformation(r1(1),r2(2),imread(imgseq1(1).rgb),imread(imgseq2(1).rgb));
-
+cam2toW.R = tr.T';
+cam2toW.T = tr.c(1,:)';
 %% Motion detection
 
 for i=1:length(imgseq1(:))
@@ -47,11 +50,14 @@ for i=1:length(imgseq1(:))
         prev_frame_box1 = box1;
         indice1 = 0;
     elseif length(prev_frame_box1.Z)<1
+        %No objects found in previous frame
         prev_frame_box1 = box1;
     elseif length(box1.Z)<1
+        %No objects found on this frame
         prev_frame_box1 = box1;
     else
-        [box1,prev_frame_box1] = add_object(box1,prev_frame_box1,aux1,max_z_bg1);
+        %Compares objects found on previous and current frame
+        [box1,prev_frame_box1] = add_object(box1,prev_frame_box1,aux1,max_z_bg1,obj1);
         aux1 = 1;
         for a = 1:length(prev_frame_box1.X(:,1))
             if prev_frame_box1.connection(a) ~= 0
@@ -68,7 +74,6 @@ for i=1:length(imgseq1(:))
             end
         end
         prev_frame_box1 = box1;
-         
     end
     % PARA BOX 2
     if indice2 == 1% first frame, store all objects!
@@ -79,7 +84,7 @@ for i=1:length(imgseq1(:))
     elseif length(box2.Z)<1
         prev_frame_box2 = box2;
     else
-        [box2,prev_frame_box2] = add_object(box2,prev_frame_box2,aux2,max_z_bg2);
+        [box2,prev_frame_box2] = add_object(box2,prev_frame_box2,aux2,max_z_bg2,obj2);
         aux2 = 1;
         for a = 1:length(prev_frame_box2.X(:,1))
             if prev_frame_box2.connection(a) ~= 0
@@ -95,10 +100,8 @@ for i=1:length(imgseq1(:))
                 obj2(box2.nr(a)).Z(i,:) = box2.Z(a,:);
             end
         end
-        prev_frame_box2 = box2;
-         
+        prev_frame_box2 = box2;    
     end
-    
        
 end
 %%
@@ -134,19 +137,67 @@ for i = 1:length(obj2)
     end
 end
 
-% % transformation of coordinates of objects in cam2 to world
-% for i = 1:length(objects2)
-%     for k = 1:length(objects2(i).X(:,1))
-%         for j = 1:8
-%             xyz = tr.T*[objects2(i).X(k,j); objects2(i).Y(k,j); objects2(i).Z(k,j)]+tr.c(1,:)';
-%             objects2_w(i).X(k,j)=xyz(1,1);
-%             objects2_w(i).Y(k,j)=xyz(2,1);
-%             objects2_w(i).Z(k,j)=xyz(3,1);
-%         end
-%     end
-%     objects2_w(i).frames_tracked = objects2(i).frames_tracked;
-% end
+% transformation of coordinates of objects in cam2 to world
+for i = 1:length(objects2)
+    for k = 1:length(objects2(i).X(:,1))
+        for j = 1:8
+            xyz = ([objects2(i).X(k,j) objects2(i).Y(k,j) objects2(i).Z(k,j)]*tr.T+tr.c(1,:))';
+            objects2_w(i).X(k,j)=xyz(1,1);
+            objects2_w(i).Y(k,j)=xyz(2,1);
+            objects2_w(i).Z(k,j)=xyz(3,1);
+        end
+    end
+    objects2_w(i).frames_tracked = objects2(i).frames_tracked;
+end
 
-%
+%%
+count =1;
+for i = 1:length(objects1) 
+    similarity = Inf*ones(1,length(objects2_w));
+    % Try to find a Match to object1(i) from the other camera
+    for j = 1:length(objects2_w)
+        dist = 0;
+        matched = intersect(objects2_w(j).frames_tracked, objects1(i).frames_tracked);
+        if ~isempty(matched)
+            %Found coincident frames,checking similarity by distance
+            for k = 1:length(matched)
+                dist = dist + dist_sim(objects2_w(j),objects1(i),matched(k));    
+            end
+            similarity(j) = dist / length(matched);
+        end   
+    end 
+    [best,n] = min(similarity);
+    if best < 0.3
+        % Match found, creating object
+        objects(count).frames_tracked = union(objects2_w(n).frames_tracked,objects1(i).frames_tracked);
+        for l = 1:length(objects(count).frames_tracked)
+            v2= find(objects2_w(n).frames_tracked == objects(count).frames_tracked(l));
+            v1= find(objects1(i).frames_tracked == objects(count).frames_tracked(l));
+            [objects(count).X(l,:), objects(count).Y(l,:) ,objects(count).Z(l,:)] = build_box_frame(v1,v2,objects1(i),objects2_w(n));
+        end
+        %Leaving a token to flag the match
+        objects2_w(n).frames_tracked(1) = -objects2_w(n).frames_tracked(1);
+        count = count+1;
+    else
+        %Match not found, create object solo
+        objects(count).X = objects1(i).X;
+        objects(count).Y = objects1(i).Y;
+        objects(count).Z = objects1(i).Z;
+        objects(count).frames_tracked = objects1(i).frames_tracked;
+        count = count+1;
+    end
+    
+end
+    
+% Insert into objects() the remaining objects of objects2_w
+for i = 1:length(objects2_w)
+    if objects2_w(i).frames_tracked(1) > 0
+        objects(count).X = objects2_w(i).X;
+        objects(count).Y = objects2_w(i).Y;
+        objects(count).Z = objects2_w(i).Z;
+        objects(count).frames_tracked = objects2_w(i).frames_tracked;
+        count = count+1;
+    end
+end
 end
 

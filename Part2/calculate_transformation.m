@@ -20,19 +20,22 @@ line([match1(:,1)'; match2(:,1)'+640],[match1(:,2)';match2(:,2)']);hold off;
 
 %%
 %%transform u,v into xyz, removing features that are in z = 0
-not_feature = [];
 point1 = [];
 point2 = [];
+count = 1;
 for i = 1:length(match1)
-%     pts1 = match1(i,:);
-%     pts2 = match2(i,:);
     aux1 = reshape(r1.res_xyz(match1(i,2),match1(i,1),:),[3 1]);
     aux2 = reshape(r2.res_xyz(match2(i,2),match2(i,1),:),[3 1]);  
     if( aux1(3) == 0 || aux2(3) == 0)
-        not_feature = [not_feature i];
+        continue;
     end  
-    point1(:,i) = aux1;
-    point2(:,i) = aux2;
+    point1(:,count) = aux1;
+    point2(:,count) = aux2;
+    matched1(count,2) = match1(i,2);
+    matched1(count,1) = match1(i,1);
+    matched2(count,2) = match2(i,2);
+    matched2(count,1) = match2(i,1);   
+    count = count +1;
 end
 %%
 %%RANSAC
@@ -42,36 +45,34 @@ niter=200;
 numinliers = [];
 matching = [];
 ind_inliers = [];
-
+transf=[];
 for i=1:niter-(n_points-1)
     %obtain N random matches from SIFT
     aux = randperm(length(point1),n_points);
-    
-    %Check if chosen matches do not belong to not_feature
-    while (sum(ismember(aux,not_feature) > 0))
-        aux = randi([1 length(point1)],1,n_points);
-    end
     %store the match number
     matching = [matching aux'];
-
     %obtain the xyz points corresponding to the match
     p1 = point1(:,aux);  
     p2 = point2(:,aux);   
-    
     %calculate rotation and translation using procrustes
-    [~,~,tr] = procrustes(p1',p2','scaling',false,'reflection',false);
-  
+    [~,~,tr_t] = procrustes(p1',p2','scaling',false,'reflection',false);
     %count the number of inliers from this model
-    error = vecnorm((point1(:,:)' - (point2(:,:)'*tr.T + ones(length(point2),1)*tr.c(1,:))),2,2);
-    inds = find(error < errorthresh);  
+    Diff = point1(:,:)' - (point2(:,:)'*tr_t.T + ones(length(point2),1)*tr_t.c(1,:));
+    error2 = sqrt(sum(Diff.^2,2));
+    inds = find(error2 < errorthresh);
+    transf = [transf tr_t];
     numinliers = [numinliers length(inds)];
-    ind_inliers(i).index = inds;
-    
+    ind_inliers(i).index = inds; 
 end
 %% 
 % use the best model
 [mm,ind] = max(numinliers);
 fprintf('Maximum num of inliers %d \n',mm);
+
+mtc_1 = matching(:,ind);
+figure(2);
+imagesc([im1 im2]);hold on;
+line([matched1(mtc_1,1)'; matched2(mtc_1,1)'+640],[matched1(mtc_1,2)';matched2(mtc_1,2)']);hold off;
 
 mtc = ind_inliers(ind).index;
 
@@ -85,7 +86,7 @@ xyz2_img_morphed = reshape(xyz2_morphed,[480 640 3]);
 %%
 figure(2);
 imagesc([im1 im2]);hold on;
-line([match1(mtc,1)'; match2(mtc,1)'+640],[match1(mtc,2)';match2(mtc,2)']);hold off;
+line([matched1(mtc,1)'; matched2(mtc,1)'+640],[matched1(mtc,2)';matched2(mtc,2)']);hold off;
 
 pc1=pointCloud(r1.xyz,'Color',reshape(r1.rgbd,[480*640 3]));
 pc2=pointCloud(xyz2_morphed,'Color',reshape(r2.rgbd,[480*640 3]));
