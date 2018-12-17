@@ -26,7 +26,7 @@ count = 1;
 for i = 1:length(match1)
     aux1 = reshape(r1.res_xyz(match1(i,2),match1(i,1),:),[3 1]);
     aux2 = reshape(r2.res_xyz(match2(i,2),match2(i,1),:),[3 1]);  
-    if( aux1(3) == 0 || aux2(3) == 0)
+    if(aux1(3) == 0 || aux2(3) == 0 || sum(r1.rgbd(match1(i,2),match1(i,1),:)) == 0 || sum(r2.rgbd(match2(i,2),match2(i,1),:)) == 0)
         continue;
     end  
     point1(:,count) = aux1;
@@ -40,8 +40,8 @@ end
 %%
 %%RANSAC
 n_points = 4;
-errorthresh=0.16;
-niter=200;
+errorthresh=0.4;
+niter=500;
 numinliers = [];
 matching = [];
 ind_inliers = [];
